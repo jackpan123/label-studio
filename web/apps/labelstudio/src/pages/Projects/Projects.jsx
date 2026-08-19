@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useParams as useRouterParams } from "react-router";
 import { Redirect } from "react-router-dom";
+import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 import { Button } from "@humansignal/ui";
 import { Oneof } from "../../components/Oneof/Oneof";
 import { Spinner } from "../../components/Spinner/Spinner";
@@ -28,8 +30,9 @@ export const ProjectsPage = () => {
   const [currentPage, setCurrentPage] = useState(getCurrentPage());
   const [totalItems, setTotalItems] = useState(1);
   const setContextProps = useContextProps();
+  const { t } = useTranslation();
 
-  useUpdatePageTitle("Projects");
+  useUpdatePageTitle(t("projects:pageTitle"));
   const defaultPageSize = Number.parseInt(localStorage.getItem("pages:projects-list") ?? 30);
 
   const [modal, setModal] = React.useState(false);
@@ -141,7 +144,11 @@ export const ProjectsPage = () => {
   );
 };
 
-ProjectsPage.title = "Projects";
+// Route metadata title is read by the routing/breadcrumb system outside of a React
+// component, so it resolves through the shared i18next singleton lazily on each access.
+Object.defineProperty(ProjectsPage, "title", {
+  get: () => i18next.t("projects:pageTitle"),
+});
 ProjectsPage.path = "/projects";
 ProjectsPage.exact = true;
 ProjectsPage.routes = ({ store }) => [
@@ -161,10 +168,11 @@ ProjectsPage.routes = ({ store }) => [
   },
 ];
 ProjectsPage.context = ({ openModal, showButton }) => {
+  const { t } = useTranslation();
   if (!showButton) return null;
   return (
-    <Button onClick={openModal} size="small" aria-label="Create new project">
-      Create
+    <Button onClick={openModal} size="small" aria-label={t("projects:createNewProject")}>
+      {t("projects:create")}
     </Button>
   );
 };

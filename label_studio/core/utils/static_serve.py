@@ -65,7 +65,7 @@ def serve(request, path, document_root=None, show_indexes=False, manifest_asset_
             f'/{manifest_asset_prefix}' if not manifest_asset_prefix.startswith('/') else manifest_asset_prefix
         )
         if possible_asset.startswith(manifest_asset_prefix):
-            possible_asset = possible_asset[len(manifest_asset_prefix) :]
+            possible_asset = possible_asset[len(manifest_asset_prefix) :].lstrip('/')
         fullpath = Path(safe_join(document_root, possible_asset))
     if not fullpath.exists():
         raise Http404(_('“%(path)s” does not exist') % {'path': fullpath})
@@ -77,6 +77,10 @@ def serve(request, path, document_root=None, show_indexes=False, manifest_asset_
 
     response = RangedFileResponse(request, fullpath.open('rb'), content_type=content_type)
     response['Last-Modified'] = http_date(statobj.st_mtime)
+    # Without an explicit cache policy browsers fall back to heuristic freshness
+    # (10% of the age since Last-Modified) and keep serving stale CSS/JS after
+    # edits. no-cache still allows 304 revalidation via If-Modified-Since.
+    response['Cache-Control'] = 'no-cache'
     if encoding:
         response['Content-Encoding'] = encoding
     return response
